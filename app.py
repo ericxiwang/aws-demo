@@ -1,11 +1,19 @@
-from flask import Flask, flash, redirect, url_for, request, jsonify
+from flask import Flask, flash, redirect, url_for, request, jsonify,render_template
 import time
 from concurrent.futures import ThreadPoolExecutor
+import os,json,uuid,platform
+path = os.getcwd()
 app = Flask(__name__)
 executor = ThreadPoolExecutor(max_workers=4)
 @app.route('/')
 def index():
-    return "api---1"
+    host = request.host
+    # Returns the host name without the port (e.g., 'localhost' or 'example.com')
+    host_only = request.host.split(':')[0]
+    # Returns the full base URL (e.g., 'http://localhost:5000/')
+    host_url = request.host_url
+
+    return render_template('index.html',current_ip = request.host,current_hostname=platform.node())
 
 
 @app.route('/stress',methods=['POST'])
@@ -29,7 +37,7 @@ def cpu_heavy_task(duration):
 def stress_cpu():
     # Get duration from request (default to 10 seconds if not provided)
     data = request.json or {}
-    duration = float(data.get('duration', 10.0))
+    duration = float(data.get('duration'))
 
     # Run the CPU stress test in a separate thread so Flask can still process other requests
     future = executor.submit(cpu_heavy_task, duration)
